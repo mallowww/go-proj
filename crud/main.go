@@ -10,29 +10,24 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	movie "github.com/mell/crud/api/movie"
 )
 
-type Movie struct {
-	ID       string    `json:"id"`
-	ISBN     string    `json:"isbn"`
-	Title    string    `json:"title"`
-	Director *Director `json:"director"`
+func Home(c echo.Context) error {
+	return c.String(http.StatusOK, "home: send 200 to tell u it's fine")
 }
-
-type Director struct {
-	Firstname string `json:"firstname"`
-	Lastname  string `json:"lastname"`
-}
-
-var movies []Movie
 
 func main() {
 	e := echo.New()
-	e.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "send 200 to tell u it's fine")
-	})
-	addr := ":1555"
+	// Routing
+	e.GET("/", Home)
+	e.GET("/movies", movie.GetAll)
+	// e.GET("/movies/{id}", getMovie)
+	// e.GET("/movies", createMovie)
+	// e.GET("/movies/{id}", updateMovie)
+	// e.GET("/movies/{id}", deleteMovie)
 
+	addr := ":1555"
 	log.Println("Server started at port", addr)
 	go func() {
 		err := e.Start(addr)
@@ -44,7 +39,7 @@ func main() {
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, os.Interrupt)
 	<-shutdown
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*6)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
 	err := e.Shutdown(ctx)
