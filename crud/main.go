@@ -22,10 +22,10 @@ func main() {
 	// Routing
 	e.GET("/", Home)
 	e.GET("/movies", movie.GetAll)
-	e.GET("/movies/{id}", getMovie)
+	e.GET("/movies/:id", movie.GetById)
 	e.POST("/movies", movie.Create)
-	// e.PUT("/movies/{id}", updateMovie)
-	// e.DELTE("/movies/{id}", deleteMovie)
+	e.PUT("/movies/:id", movie.Update)
+	e.DELETE("/movies/:id", movie.Delete)
 
 	addr := ":1555"
 	log.Println("Server started at port", addr)
