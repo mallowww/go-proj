@@ -1,13 +1,17 @@
+//go:build ut || api
+
 package movie_test
 
 import (
+	"bytes"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/labstack/echo/v4"
+	"github.com/mallowww/crud/api/movie"
 	"github.com/mallowww/crud/model"
-	"github.com/mallowww/crud/movie"
 )
 
 func TestCreate(t *testing.T) {
@@ -15,7 +19,9 @@ func TestCreate(t *testing.T) {
 	//arrange
 	testMovie := model.Movie{ID: "1", ISBN: "438227", Title: "Movie One", Director: &model.Director{Firstname: "Number", Lastname: "One"}}
 
-	req := httptest.NewRequest(http.MethodPost, "/movies", testMovie)
+	var body bytes.Buffer
+	json.NewEncoder(&body).Encode(testMovie)
+	req := httptest.NewRequest(http.MethodPost, "/movies", &body)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 
