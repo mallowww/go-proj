@@ -1,4 +1,4 @@
-module github.com/mell/crud
+module github.com/mallowww/crud
 
 go 1.19
 

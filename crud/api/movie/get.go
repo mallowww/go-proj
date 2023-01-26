@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/mell/crud/model"
+	"github.com/mallowww/crud/model"
 )
 
 var movies = []model.Movie{
@@ -13,6 +13,5 @@ var movies = []model.Movie{
 }
 
 func GetAll(c echo.Context) error {
-	movies = append([]model.Movie{}, movies...)
 	return c.JSON(http.StatusOK, movies)
 }

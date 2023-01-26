@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-	movie "github.com/mell/crud/api/movie"
+	movie "github.com/mallowww/crud/api/movie"
 )
 
 func Home(c echo.Context) error {
@@ -22,10 +22,10 @@ func main() {
 	// Routing
 	e.GET("/", Home)
 	e.GET("/movies", movie.GetAll)
-	// e.GET("/movies/{id}", getMovie)
-	// e.GET("/movies", createMovie)
-	// e.GET("/movies/{id}", updateMovie)
-	// e.GET("/movies/{id}", deleteMovie)
+	e.GET("/movies/{id}", getMovie)
+	e.POST("/movies", movie.Create)
+	// e.PUT("/movies/{id}", updateMovie)
+	// e.DELTE("/movies/{id}", deleteMovie)
 
 	addr := ":1555"
 	log.Println("Server started at port", addr)
