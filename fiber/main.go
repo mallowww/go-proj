@@ -2,20 +2,66 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 
-	"github.com/gorilla/mux"
+	"github.com/gofiber/fiber/v2"
+	_ "github.com/gorilla/mux"
 )
 
-func main() {
-	// server := http.NewServeMux()
-	server := mux.NewRouter()
-	server.HandleFunc("/rentals/{id}", Rentals).Methods(http.MethodGet)
-	http.ListenAndServe(":8080", server)
-
+type Person struct {
+	Id   int    `json:"id"`
+	Name string `json:"name"`
 }
 
-func Rentals(w http.ResponseWriter, r *http.Request) {
-	id := mux.Vars(r)["id"]
-	fmt.Println(id)
+func main() {
+	app := fiber.New()
+	app.Get("/rentals", GetAllRentals)
+	app.Get("/rentals/:name/:surname", GetRentalByName)
+	app.Get("/rentals/:id", GetRentalById)
+
+	app.Get("/query", GetNameFromQuery)
+	app.Get("/query2", GetNameFromQueryParser)
+
+	app.Get("/wildcards/*", Wildcards)
+	app.Post("/rentals", CreateRental)
+
+	app.Listen(":8080")
+}
+
+func GetAllRentals(c *fiber.Ctx) error {
+	return c.SendString("get rentals")
+}
+
+func GetRentalByName(c *fiber.Ctx) error {
+	name := c.Params("name")
+	surname := c.Params("surname")
+	return c.SendString("name: " + name + ", surname:" + surname)
+}
+
+func GetRentalById(c *fiber.Ctx) error {
+	id, err := c.ParamsInt("id")
+	if err != nil {
+		return fiber.ErrBadRequest
+	}
+	return c.SendString(fmt.Sprintf("id: %v", id))
+}
+
+func GetNameFromQuery(c *fiber.Ctx) error {
+	name := c.Query("name")
+	surename := c.Query("surname")
+	return c.SendString("name: " + name + " surname: " + surename)
+}
+
+func GetNameFromQueryParser(c *fiber.Ctx) error {
+	person := Person{}
+	c.QueryParser(&person)
+	return c.JSON(person)
+}
+
+func CreateRental(c *fiber.Ctx) error {
+	return c.SendString("post rentals")
+}
+
+func Wildcards(c *fiber.Ctx) error {
+	wildcard := c.Params("*")
+	return c.SendString(wildcard)
 }
