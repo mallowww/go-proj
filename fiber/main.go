@@ -2,8 +2,12 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/requestid"
 	_ "github.com/gorilla/mux"
 )
 
@@ -14,21 +18,49 @@ type Person struct {
 
 func main() {
 	app := fiber.New()
+	app.Use("/rentals", RentalMiddleware)
+	app.Use(requestid.New())
+	app.Use(cors.New(cors.Config{
+		AllowOrigins:     "*",
+		AllowMethods:     "GET, POST, HEAD, PUT, DELETE",
+		AllowCredentials: true,
+	}))
+	app.Use(logger.New(logger.Config{
+		TimeZone: "Asia/Bangkok",
+	}))
+
 	app.Get("/rentals", GetAllRentals)
 	app.Get("/rentals/:name/:surname", GetRentalByName)
 	app.Get("/rentals/:id", GetRentalById)
 
 	app.Get("/query", GetNameFromQuery)
 	app.Get("/query2", GetNameFromQueryParser)
-
 	app.Get("/wildcards/*", Wildcards)
+
 	app.Post("/rentals", CreateRental)
+
+	// static file
+	app.Static("/", "./wwwroot", fiber.Static{
+		Index:         "index.html",
+		CacheDuration: time.Second * 7,
+	})
+
+	app.Get("/error", NewError)
 
 	app.Listen(":8080")
 }
 
+func RentalMiddleware(c *fiber.Ctx) error {
+	c.Locals("name", "var")
+	fmt.Println("before")
+	err := c.Next()
+	fmt.Println("after")
+	return err
+}
+
 func GetAllRentals(c *fiber.Ctx) error {
-	return c.SendString("get rentals")
+	name := c.Locals("name")
+	return c.SendString(fmt.Sprintf("get rentals for %v", name))
 }
 
 func GetRentalByName(c *fiber.Ctx) error {
@@ -64,4 +96,8 @@ func CreateRental(c *fiber.Ctx) error {
 func Wildcards(c *fiber.Ctx) error {
 	wildcard := c.Params("*")
 	return c.SendString(wildcard)
+}
+
+func NewError(c *fiber.Ctx) error {
+	return fiber.NewError(fiber.StatusNotFound, "message not found")
 }
