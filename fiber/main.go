@@ -17,7 +17,11 @@ type Person struct {
 }
 
 func main() {
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		Prefork: true,
+		CaseSensitive: false,
+		StrictRouting: false,
+	})
 	app.Use("/rentals", RentalMiddleware)
 	app.Use(requestid.New())
 	app.Use(cors.New(cors.Config{
