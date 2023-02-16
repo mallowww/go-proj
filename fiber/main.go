@@ -18,7 +18,7 @@ type Person struct {
 
 func main() {
 	app := fiber.New(fiber.Config{
-		Prefork: true,
+		Prefork:       true,
 		CaseSensitive: false,
 		StrictRouting: false,
 	})
@@ -50,6 +50,51 @@ func main() {
 	})
 
 	app.Get("/error", NewError)
+
+	// Group
+	v1 := app.Group("/v1", func(c *fiber.Ctx) error {
+		c.Set("version", "v1")
+		return c.Next()
+	})
+	v1.Get("/rentals", func(c *fiber.Ctx) error {
+		return c.SendString("v1")
+	})
+
+	v2 := app.Group("/v2", func(c *fiber.Ctx) error {
+		c.Set("version", "v2")
+		return c.Next()
+	})
+	v2.Get("/rentals", func(c *fiber.Ctx) error {
+		return c.SendString("v2")
+	})
+
+	// Mount
+	userApp := fiber.New()
+	userApp.Get("/login", func(c *fiber.Ctx) error {
+		return c.SendString("Login")
+	})
+	app.Mount("/user", userApp)
+
+	// Server
+	app.Server().MaxConnsPerIP = 1
+	app.Get("/server", func(c *fiber.Ctx) error {
+		time.Sleep(time.Second * 30)
+		return c.SendString("server")
+	})
+
+	// Environtment
+	app.Get("/env", func(c *fiber.Ctx) error {
+		return c.JSON(fiber.Map{
+			"BaseURL":     c.BaseURL(),
+			"Hostname":    c.Hostname(),
+			"IP":          c.IP(),
+			"IPs":         c.IPs(),
+			"OriginalURL": c.OriginalURL(),
+			"Path":        c.Path(),
+			"Protocol":    c.Protocol(),
+			"Subdomains":  c.Subdomains(),
+		})
+	})
 
 	app.Listen(":8080")
 }
