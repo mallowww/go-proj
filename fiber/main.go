@@ -96,6 +96,23 @@ func main() {
 		})
 	})
 
+	// Body
+	app.Post("/body", func(c *fiber.Ctx) error {
+		fmt.Printf("IsJson: %v\n", c.Is("json"))
+		// fmt.Println(string(c.Body()))
+
+		person := Person{}
+		err := c.BodyParser(&person)
+		if err != nil {
+			return err
+		}
+		// fiber.NewError(fiber.StatusUnprocessableEntity)
+
+		fmt.Println(person)
+		return nil
+
+	})
+
 	app.Listen(":8080")
 }
 
