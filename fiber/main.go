@@ -99,16 +99,14 @@ func main() {
 	// Body
 	app.Post("/body", func(c *fiber.Ctx) error {
 		fmt.Printf("IsJson: %v\n", c.Is("json"))
-		// fmt.Println(string(c.Body()))
 
-		person := Person{}
-		err := c.BodyParser(&person)
+		data := map[string]interface{}{}
+		err := c.BodyParser(&data)
 		if err != nil {
 			return err
 		}
-		// fiber.NewError(fiber.StatusUnprocessableEntity)
 
-		fmt.Println(person)
+		fmt.Println(data)
 		return nil
 
 	})
