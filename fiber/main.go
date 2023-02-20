@@ -15,6 +15,7 @@ import (
 	_ "github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
 	"golang.org/x/crypto/bcrypt"
+	jwtware "github.com/gofiber/jwt/v3"
 )
 
 var db *sqlx.DB
@@ -46,6 +47,17 @@ func main() {
 	}
 
 	app := fiber.New()
+
+	app.Use("home", jwtware.New(jwtware.Config{
+		SigningMethod: "HS256",
+		SigningKey: []byte(jwtSecret),
+		SuccessHandler:func(c *fiber.Ctx) error {
+			return c.Next()
+		},
+		ErrorHandler: func(c *fiber.Ctx, err error) error {
+			return fiber.ErrUnauthorized
+		},
+	}))
 
 	app.Post("/signup", Signup)
 	app.Post("/login", Login)
