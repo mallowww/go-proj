@@ -6,41 +6,48 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func main() {
+	initBooks()
+	r := gin.Default()
+	r.GET("/", handleHomepage)
+	r.GET("/allBooks", handleGetAllBooks)
+	r.GET("/allBooks/:id", handleGetBook)
+	r.POST("/allBooks", handleCreateBook)
+	r.DELETE("/allBooks/:id", handleDeleteBookById)
+	r.Run()
+}
+
 type Book struct {
 	ID     string `json:"id"`
 	Title  string `json:"title"`
 	Author string `json:"author"`
 }
 
-var books = []Book{
-	{ID: "1", Title: "title1", Author: "author1"},
-	{ID: "2", Title: "title2", Author: "author2"},
-	{ID: "3", Title: "title3", Author: "author3"},
+var (
+	allBooks []Book
+)
+
+func initBooks() {
+	allBooks = []Book{
+		{ID: "1", Title: "title1", Author: "author1"},
+		{ID: "2", Title: "title2", Author: "author2"},
+		{ID: "3", Title: "title3", Author: "author3"},
+	}
 }
 
-func main() {
-	r := gin.Default()
-	r.GET("/", handleHome)
-	r.GET("/books", handleGetBooks)
-	r.GET("/books/:id", handleGetBookByID)
-	r.POST("/books", handleSaveBook)
-	r.DELETE("/books/:id", handleDeleteBook)
-	r.Run()
-}
-
-func handleHome(c *gin.Context) {
+func handleHomepage(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Welcome to the book store!",
 	})
 }
 
-func handleGetBooks(c *gin.Context) {
-	c.JSON(http.StatusOK, books)
+func handleGetAllBooks(c *gin.Context) {
+	c.JSON(http.StatusOK, allBooks)
 }
 
-func handleGetBookByID(c *gin.Context) {
+func handleGetBook(c *gin.Context) {
 	bookId := c.Param("id")
-	for _, book := range books {
+	for _, book := range allBooks {
 		if book.ID == bookId {
 			c.JSON(http.StatusOK, book)
 			return
@@ -51,7 +58,7 @@ func handleGetBookByID(c *gin.Context) {
 	})
 }
 
-func handleSaveBook(c *gin.Context) {
+func handleCreateBook(c *gin.Context) {
 	var book Book
 
 	if err := c.ShouldBindJSON(&book); err != nil {
@@ -61,7 +68,7 @@ func handleSaveBook(c *gin.Context) {
 		return
 	}
 
-	for _, existingBook := range books {
+	for _, existingBook := range allBooks {
 		if existingBook.ID == book.ID {
 			c.JSON(http.StatusConflict, gin.H{
 				"error": "Book ID already exists",
@@ -70,16 +77,16 @@ func handleSaveBook(c *gin.Context) {
 		}
 	}
 
-	books = append(books, book)
+	allBooks = append(allBooks, book)
 	c.JSON(http.StatusCreated, book)
 }
 
-func handleDeleteBook(c *gin.Context) {
+func handleDeleteBookById(c *gin.Context) {
 	id := c.Param("id")
 
-	for i, book := range books {
+	for i, book := range allBooks {
 		if book.ID == id {
-			books = append(books[:i], books[i+1:]...)
+			allBooks = append(allBooks[:i], allBooks[i+1:]...)
 			c.JSON(http.StatusOK, gin.H{
 				"message": "Book deleted successfully",
 			})
