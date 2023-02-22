@@ -15,11 +15,11 @@ func main() {
 	var err error
 	db, err = gorm.Open(sqlite.Open("sample-library.db"), &gorm.Config{})
 	if err != nil {
-		panic("failed to connect database")
+		panic("Failed to connect database")
 	}
 	db.AutoMigrate(&Book{})
 
-	initBooks()
+	// initBooks()
 	r := gin.Default()
 	r.GET("/", handleHomepage)
 	r.GET("/allBooks", handleGetAllBooks)
@@ -30,6 +30,7 @@ func main() {
 }
 
 type Book struct {
+	gorm.Model
 	ID     string `json:"id"`
 	Title  string `json:"title"`
 	Author string `json:"author"`
@@ -54,20 +55,26 @@ func handleHomepage(c *gin.Context) {
 }
 
 func handleGetAllBooks(c *gin.Context) {
+	var books []Book
+	if err := db.Find(&books).Error; err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
 	c.JSON(http.StatusOK, allBooks)
 }
 
 func handleGetBook(c *gin.Context) {
 	bookId := c.Param("id")
-	for _, book := range allBooks {
-		if book.ID == bookId {
-			c.JSON(http.StatusOK, book)
-			return
-		}
+	var book Book
+	if err := db.Where("id = ?", bookId).First(&book).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "Book not found",
+		})
+		return
 	}
-	c.JSON(http.StatusNotFound, gin.H{
-		"error": "Book not found",
-	})
+
+	c.JSON(http.StatusOK, book)
 }
 
 func handleCreateBook(c *gin.Context) {
