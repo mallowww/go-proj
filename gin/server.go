@@ -36,18 +36,6 @@ type Book struct {
 	Author string `json:"author"`
 }
 
-var (
-	allBooks []Book
-)
-
-func initBooks() {
-	allBooks = []Book{
-		{ID: "1", Title: "title1", Author: "author1"},
-		{ID: "2", Title: "title2", Author: "author2"},
-		{ID: "3", Title: "title3", Author: "author3"},
-	}
-}
-
 func handleHomepage(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Welcome to the book store!",
@@ -61,7 +49,7 @@ func handleGetAllBooks(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, allBooks)
+	c.JSON(http.StatusOK, books)
 }
 
 func handleGetBook(c *gin.Context) {
@@ -87,32 +75,39 @@ func handleCreateBook(c *gin.Context) {
 		return
 	}
 
-	for _, existingBook := range allBooks {
-		if existingBook.ID == book.ID {
-			c.JSON(http.StatusConflict, gin.H{
-				"error": "Book ID already exists",
-			})
-			return
-		}
+	var existingBook Book
+	if err := db.Where("id = ?", book.ID).First(&existingBook).Error; err == nil {
+		c.JSON(http.StatusConflict, gin.H{
+			"error": "Book ID already exists",
+		})
+		return
 	}
 
-	allBooks = append(allBooks, book)
+	if err := db.Create(&book).Error; err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
 	c.JSON(http.StatusCreated, book)
 }
 
 func handleDeleteBookById(c *gin.Context) {
 	id := c.Param("id")
 
-	for i, book := range allBooks {
-		if book.ID == id {
-			allBooks = append(allBooks[:i], allBooks[i+1:]...)
-			c.JSON(http.StatusOK, gin.H{
-				"message": "Book deleted successfully",
-			})
-			return
-		}
+	var book Book
+	if err := db.Where("id = ?", id).First(&book).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "Book not found",
+		})
+		return
 	}
-	c.JSON(http.StatusNotFound, gin.H{
-		"error": "Book not found",
+
+	if err := db.Delete(&book).Error; err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Book deleted successfully",
 	})
 }
