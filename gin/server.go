@@ -4,9 +4,21 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
+var db *gorm.DB
+
 func main() {
+	// avoid error shadow casting
+	var err error
+	db, err = gorm.Open(sqlite.Open("sample-library.db"), &gorm.Config{})
+	if err != nil {
+		panic("failed to connect database")
+	}
+	db.AutoMigrate(&Book{})
+
 	initBooks()
 	r := gin.Default()
 	r.GET("/", handleHomepage)
